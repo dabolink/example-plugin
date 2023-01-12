@@ -18,7 +18,7 @@ public interface XPRelicSoundConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "Include maxed skills.",
+		keyName = "include maxed skills",
 		name = "Include maxed skills.",
 		description = "If true, roll even if the skill is maxed."
 	)
