@@ -5,11 +5,16 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Skill;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.StatChanged;
+import net.runelite.client.chat.ChatColorType;
+import net.runelite.client.chat.ChatMessageBuilder;
+import net.runelite.client.chat.ChatMessageManager;
+import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -21,12 +26,18 @@ import net.runelite.client.plugins.PluginDescriptor;
 )
 public class XPRelicSoundPlugin extends Plugin
 {
-	private static final int RELIC_SOUND_ID = 4212;
+	private static final String RELIC_CHAT_MESSAGE = new ChatMessageBuilder()
+				.append(ChatColorType.HIGHLIGHT)
+				.append("You have a sad feeling like you would have got a relic.")
+				.build();
 
 	private final Map<Skill, Integer> skillXPMap = new HashMap<>();
 
 	@Inject
 	private Client client;
+
+	@Inject
+	private ChatMessageManager chatMessageManager;
 
 	@Inject
 	private XPRelicSoundConfig config;
@@ -61,10 +72,20 @@ public class XPRelicSoundPlugin extends Plugin
 
 		if (rollChance(experience - skillXPMap.get(skill)))
 		{
-			client.playSoundEffect(RELIC_SOUND_ID);
+			procRelicEffect();
 		}
 
 		skillXPMap.put(skill, experience);
+	}
+
+	private void procRelicEffect() {
+		if (config.includeChatMessage()) {
+			chatMessageManager.queue(QueuedMessage.builder()
+					.type(ChatMessageType.CONSOLE)
+					.runeLiteFormattedMessage(RELIC_CHAT_MESSAGE)
+					.build());
+		}
+		client.playSoundEffect(config.relicSound());
 	}
 
 	private boolean rollChance(int experienceGained)
